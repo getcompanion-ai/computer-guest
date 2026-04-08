@@ -1,0 +1,22 @@
+Port 2222
+ListenAddress 0.0.0.0
+
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key
+
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+UsePAM no
+AuthorizedKeysFile .ssh/authorized_keys
+StrictModes no
+
+SyslogFacility AUTH
+LogLevel INFO
+PrintMotd no
+
+ClientAliveInterval 30
+ClientAliveCountMax 3
+
+PidFile /run/sshd.pid
