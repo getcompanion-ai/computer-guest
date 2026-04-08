@@ -21,7 +21,7 @@ computer_prompt_base_name() {
 }
 
 computer_prompt_name() {
-  printf '%s(computer)' "$(computer_prompt_base_name)"
+  printf '%s' "$(computer_prompt_base_name)"
 }
 
 export EDITOR="${EDITOR:-nvim}"

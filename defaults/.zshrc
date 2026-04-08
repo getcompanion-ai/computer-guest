@@ -30,7 +30,7 @@ computer_prompt_base_name() {
 }
 
 computer_prompt_name() {
-  printf '%s(computer)' "$(computer_prompt_base_name)"
+  printf '%s' "$(computer_prompt_base_name)"
 }
 
 ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
