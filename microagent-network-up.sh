@@ -40,9 +40,8 @@ ip link set dev "$primary_iface" up
 ip addr replace "${guest_ip}/30" dev "$primary_iface"
 ip route replace default via "$gateway_ip" dev "$primary_iface"
 
-if [ -w /etc/resolv.conf ]; then
-  cat >/etc/resolv.conf <<'EOF'
+mkdir -p /etc
+cat >/etc/resolv.conf <<'EOF'
 nameserver 1.1.1.1
 nameserver 8.8.8.8
 EOF
-fi

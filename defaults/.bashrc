@@ -3,8 +3,25 @@ case $- in
   *) return ;;
 esac
 
+computer_prompt_base_name() {
+  local name=""
+  if [ -n "${COMPUTER_NAME:-}" ]; then
+    name="${COMPUTER_NAME}"
+  elif [ -n "${COMPUTER_HANDLE:-}" ]; then
+    name="${COMPUTER_HANDLE}"
+  elif [ -r /etc/microagent/machine-name ]; then
+    IFS= read -r name </etc/microagent/machine-name || true
+  elif [ -r /etc/hostname ]; then
+    IFS= read -r name </etc/hostname || true
+  fi
+  if [ -z "$name" ]; then
+    name="microagentcomputer"
+  fi
+  printf '%s' "$name"
+}
+
 computer_prompt_name() {
-  printf '%s' "${COMPUTER_NAME:-${COMPUTER_HANDLE:-microagentcomputer}}"
+  printf '%s(computer)' "$(computer_prompt_base_name)"
 }
 
 export EDITOR="${EDITOR:-nvim}"

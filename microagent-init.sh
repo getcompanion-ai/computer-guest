@@ -7,6 +7,18 @@ log() {
   printf '[microagent-init] %s\n' "$*" >&2
 }
 
+read_machine_name() {
+  if [ -r /etc/microagent/machine-name ]; then
+    tr -d '\r\n' </etc/microagent/machine-name
+    return 0
+  fi
+  if [ -r /etc/hostname ]; then
+    tr -d '\r\n' </etc/hostname
+    return 0
+  fi
+  printf 'microagentcomputer'
+}
+
 mountpoint -q /proc || mount -t proc proc /proc
 mountpoint -q /sys || mount -t sysfs sysfs /sys
 mountpoint -q /dev || mount -t devtmpfs devtmpfs /dev
@@ -60,6 +72,18 @@ if ! /usr/local/bin/microagent-network-up >/var/log/network.log 2>&1; then
   cat /var/log/network.log >&2 || true
   exit 1
 fi
+
+machine_name="$(read_machine_name)"
+export COMPUTER_NAME="$machine_name"
+printf '%s\n' "$machine_name" >/etc/hostname
+cat >/etc/hosts <<EOF
+127.0.0.1 localhost
+127.0.1.1 $machine_name
+::1 localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+EOF
+hostname "$machine_name" >/dev/null 2>&1 || true
 
 if [ ! -f /etc/ssh/ssh_host_ed25519_key ]; then
   log "generating ssh host keys"
