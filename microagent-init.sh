@@ -10,6 +10,9 @@ log() {
 mountpoint -q /proc || mount -t proc proc /proc
 mountpoint -q /sys || mount -t sysfs sysfs /sys
 mountpoint -q /dev || mount -t devtmpfs devtmpfs /dev
+mkdir -p /dev/pts /dev/shm
+mountpoint -q /dev/pts || mount -t devpts devpts /dev/pts -o mode=620,ptmxmode=666,gid=5
+mountpoint -q /dev/shm || mount -t tmpfs tmpfs /dev/shm
 mountpoint -q /run || mount -t tmpfs tmpfs /run
 
 mkdir -p /tmp /var/tmp /run/sshd /var/log
@@ -64,7 +67,7 @@ if [ ! -f /etc/ssh/ssh_host_ed25519_key ]; then
 fi
 
 if [ -f /etc/microagent/authorized_keys ]; then
-  log "installing baked authorized_keys for node"
+  log "installing injected authorized_keys for node"
   install -d -m 0700 -o node -g node /home/node/.ssh
   install -m 0600 -o node -g node /etc/microagent/authorized_keys /home/node/.ssh/authorized_keys
 fi

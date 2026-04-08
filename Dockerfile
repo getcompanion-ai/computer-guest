@@ -3,23 +3,62 @@ FROM public.ecr.aws/docker/library/ubuntu:24.04
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
-ARG MICROAGENT_TEST_AUTHORIZED_KEY=""
+ENV EDITOR=nvim \
+    VISUAL=nvim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
+    gnupg \
+  && mkdir -p /etc/apt/keyrings \
+  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+  && printf '%s\n' "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >/etc/apt/sources.list.d/nodesource.list \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends \
+    bat \
+    build-essential \
     dbus-x11 \
+    dnsutils \
     eza \
+    fd-find \
+    file \
     fonts-dejavu-core \
+    fzf \
+    gh \
     git \
+    iputils-ping \
     iproute2 \
     jitterentropy-rngd \
+    jq \
+    just \
+    less \
+    lsof \
+    make \
+    man-db \
+    manpages \
+    netcat-openbsd \
     net-tools \
     ncurses-bin \
+    neovim \
+    nodejs \
     novnc \
     openbox \
     openssh-server \
+    pipx \
+    procps \
+    python3 \
+    python3-pip \
+    python3-venv \
+    ripgrep \
+    rsync \
+    shellcheck \
+    sqlite3 \
     sudo \
+    tmux \
+    tree \
+    unzip \
+    wget \
+    xz-utils \
     zsh \
     zsh-autosuggestions \
     zsh-syntax-highlighting \
@@ -39,7 +78,11 @@ RUN useradd --create-home --shell /bin/bash node \
   && usermod -aG sudo node \
   && printf 'node ALL=(ALL) NOPASSWD:ALL\n' >/etc/sudoers.d/node \
   && chmod 440 /etc/sudoers.d/node \
-  && install -d -m 0755 /etc/microagent
+  && install -d -m 0755 /etc/microagent \
+  && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
+  && ln -sf /usr/bin/batcat /usr/local/bin/bat \
+  && ln -sf /usr/bin/nvim /usr/local/bin/vim \
+  && ln -sf /usr/bin/nvim /usr/local/bin/vi
 
 COPY docker/guest/sshd_config /etc/ssh/sshd_config
 COPY docker/guest/microagent-init.sh /usr/local/bin/microagent-init
@@ -62,9 +105,9 @@ RUN chmod 755 /usr/local/bin/microagent-init /usr/local/bin/microagent-desktop-s
   && tic -x -o /usr/share/terminfo /tmp/xterm-kitty.terminfo \
   && rm -f /tmp/xterm-ghostty.terminfo /tmp/xterm-kitty.terminfo
 
-RUN if [ -n "$MICROAGENT_TEST_AUTHORIZED_KEY" ]; then \
-      printf '%s\n' "$MICROAGENT_TEST_AUTHORIZED_KEY" >/etc/microagent/authorized_keys; \
-      chmod 600 /etc/microagent/authorized_keys; \
-    fi
+RUN npm install -g \
+      @anthropic-ai/claude-code \
+      @openai/codex \
+    && npm cache clean --force
 
 CMD ["/usr/local/bin/microagent-init"]

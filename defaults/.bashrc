@@ -7,6 +7,10 @@ computer_prompt_name() {
   printf '%s' "${COMPUTER_NAME:-${COMPUTER_HANDLE:-microagentcomputer}}"
 }
 
+export EDITOR="${EDITOR:-nvim}"
+export VISUAL="${VISUAL:-nvim}"
+alias vim='nvim'
+alias vi='nvim'
 alias ls='eza --group-directories-first --icons=auto'
 alias la='eza -a --group-directories-first --icons=auto'
 alias ll='eza -lah --git --group-directories-first --icons=auto'
