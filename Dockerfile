@@ -84,15 +84,15 @@ RUN useradd --create-home --shell /bin/bash node \
   && ln -sf /usr/bin/nvim /usr/local/bin/vim \
   && ln -sf /usr/bin/nvim /usr/local/bin/vi
 
-COPY docker/guest/sshd_config /etc/ssh/sshd_config
-COPY docker/guest/microagent-init.sh /usr/local/bin/microagent-init
-COPY docker/guest/microagent-desktop-session.sh /usr/local/bin/microagent-desktop-session
-COPY docker/guest/microagent-network-up.sh /usr/local/bin/microagent-network-up
-COPY docker/guest/defaults/.zshrc /home/node/.zshrc
-COPY docker/guest/defaults/.bashrc /home/node/.bashrc
-COPY docker/guest/defaults/.profile /home/node/.profile
-COPY docker/guest/terminfo/xterm-ghostty.terminfo /tmp/xterm-ghostty.terminfo
-COPY docker/guest/terminfo/xterm-kitty.terminfo /tmp/xterm-kitty.terminfo
+COPY sshd_config /etc/ssh/sshd_config
+COPY microagent-init.sh /usr/local/bin/microagent-init
+COPY microagent-desktop-session.sh /usr/local/bin/microagent-desktop-session
+COPY microagent-network-up.sh /usr/local/bin/microagent-network-up
+COPY defaults/.zshrc /home/node/.zshrc
+COPY defaults/.bashrc /home/node/.bashrc
+COPY defaults/.profile /home/node/.profile
+COPY terminfo/xterm-ghostty.terminfo /tmp/xterm-ghostty.terminfo
+COPY terminfo/xterm-kitty.terminfo /tmp/xterm-kitty.terminfo
 
 RUN chmod 755 /usr/local/bin/microagent-init /usr/local/bin/microagent-desktop-session /usr/local/bin/microagent-network-up \
   && chown node:node /home/node/.zshrc /home/node/.bashrc /home/node/.profile \
