@@ -5,14 +5,14 @@ esac
 
 computer_prompt_base_name() {
   local name=""
-  if [ -n "${COMPUTER_NAME:-}" ]; then
-    name="${COMPUTER_NAME}"
-  elif [ -n "${COMPUTER_HANDLE:-}" ]; then
-    name="${COMPUTER_HANDLE}"
-  elif [ -r /etc/microagent/machine-name ]; then
+  if [ -r /etc/microagent/machine-name ]; then
     IFS= read -r name </etc/microagent/machine-name || true
   elif [ -r /etc/hostname ]; then
     IFS= read -r name </etc/hostname || true
+  elif [ -n "${COMPUTER_NAME:-}" ]; then
+    name="${COMPUTER_NAME}"
+  elif [ -n "${COMPUTER_HANDLE:-}" ]; then
+    name="${COMPUTER_HANDLE}"
   fi
   if [ -z "$name" ]; then
     name="microagentcomputer"
