@@ -61,18 +61,5 @@ if [ -r /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]; then
   source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
-if [ -r /opt/zsh/pure/pure.zsh ] && [ -r /opt/zsh/pure/async.zsh ]; then
-  fpath=(/opt/zsh/pure $fpath)
-  autoload -Uz promptinit
-  promptinit
-  if prompt pure >/dev/null 2>&1; then
-    prompt_pure_context() { :; }
-    zstyle ':prompt:pure:path' color blue
-    pure_prompt="$PROMPT"
-    PROMPT='%F{green}$(computer_prompt_name)%f '"$pure_prompt"
-  else
-    PROMPT='%F{green}$(computer_prompt_name)%f %F{blue}%~%f %# '
-  fi
-else
-  PROMPT='%F{green}$(computer_prompt_name)%f %F{blue}%~%f %# '
-fi
+# Keep the prompt simple so SSH/browser terminals do not render raw control sequences.
+PROMPT='%F{green}$(computer_prompt_name)%f %F{blue}%~%f %# '
