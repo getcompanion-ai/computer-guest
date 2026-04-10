@@ -2,7 +2,7 @@
 Alignment=3
 AutoPinning=true
 CurrentWorkspaceOnly=false
-DockItems=xfce4-terminal.dockitem;;thunar.dockitem;;chromium.dockitem
+DockItems=xfce4-terminal.dockitem;;thunar.dockitem;;google-chrome.dockitem
 HideDelay=0
 HideMode=3
 IconSize=48

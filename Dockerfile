@@ -86,22 +86,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dbus-user-session \
   && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://ftp-master.debian.org/keys/archive-key-12.asc \
-      | gpg --dearmor -o /etc/apt/keyrings/debian-archive.gpg \
-  && printf '%s\n' \
-      "deb [arch=amd64 signed-by=/etc/apt/keyrings/debian-archive.gpg] http://deb.debian.org/debian sid main" \
-      >/etc/apt/sources.list.d/debian-sid.list \
-  && printf '%s\n' \
-      "Package: *"            \
-      "Pin: release a=unstable" \
-      "Pin-Priority: 10"       \
-      ""                        \
-      "Package: chromium chromium-common chromium-sandbox" \
-      "Pin: release a=unstable" \
-      "Pin-Priority: 500"      \
-      >/etc/apt/preferences.d/chromium \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends chromium \
+RUN curl -fsSL -o /tmp/google-chrome-stable.deb \
+      https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+  && apt-get update -qq \
+  && apt-get install -y --no-install-recommends /tmp/google-chrome-stable.deb \
+  && rm -f /tmp/google-chrome-stable.deb /etc/apt/sources.list.d/google-chrome.list \
   && rm -rf /var/lib/apt/lists/*
 
 RUN useradd --create-home --shell /bin/bash node \
