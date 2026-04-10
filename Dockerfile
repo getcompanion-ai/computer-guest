@@ -84,13 +84,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-noto-core \
     fonts-noto-color-emoji \
     dbus-user-session \
-    xclip \
   && rm -rf /var/lib/apt/lists/*
 
 # Chromium: Ubuntu 24.04 only ships a snap stub, so pull the real .deb from
-# the Debian Sid repo (pinned low so it only satisfies chromium itself).
-RUN printf '%s\n' \
-      "deb [arch=amd64] http://deb.debian.org/debian sid main" \
+# the Debian Sid repo with proper GPG key verification.
+RUN curl -fsSL https://ftp-master.debian.org/keys/archive-key-12.asc \
+      | gpg --dearmor -o /etc/apt/keyrings/debian-archive.gpg \
+  && printf '%s\n' \
+      "deb [arch=amd64 signed-by=/etc/apt/keyrings/debian-archive.gpg] http://deb.debian.org/debian sid main" \
       >/etc/apt/sources.list.d/debian-sid.list \
   && printf '%s\n' \
       "Package: *"            \

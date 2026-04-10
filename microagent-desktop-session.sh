@@ -28,10 +28,22 @@ cleanup() {
   [ -n "${websockify_pid:-}" ] && kill "$websockify_pid" >/dev/null 2>&1 || true
   [ -n "${x11vnc_pid:-}" ] && kill "$x11vnc_pid" >/dev/null 2>&1 || true
   [ -n "${plank_pid:-}" ] && kill "$plank_pid" >/dev/null 2>&1 || true
+  [ -n "${autocutsel_clip_pid:-}" ] && kill "$autocutsel_clip_pid" >/dev/null 2>&1 || true
+  [ -n "${autocutsel_pri_pid:-}" ] && kill "$autocutsel_pri_pid" >/dev/null 2>&1 || true
   [ -n "${xfce_pid:-}" ] && kill "$xfce_pid" >/dev/null 2>&1 || true
+  [ -n "${dbus_pid:-}" ] && kill "$dbus_pid" >/dev/null 2>&1 || true
   [ -n "${xvfb_pid:-}" ] && kill "$xvfb_pid" >/dev/null 2>&1 || true
   wait >/dev/null 2>&1 || true
   exit 0
+}
+
+# Start a persistent D-Bus session and export its address so all child
+# processes (XFCE, Plank, autocutsel) share the same bus.
+start_dbus() {
+  log "starting dbus session"
+  eval "$(dbus-launch --sh-syntax)"
+  export DBUS_SESSION_BUS_ADDRESS
+  dbus_pid="$DBUS_SESSION_BUS_PID"
 }
 
 start_xfce() {
@@ -43,16 +55,45 @@ start_xfce() {
     XDG_CURRENT_DESKTOP="$XDG_CURRENT_DESKTOP" \
     XDG_SESSION_DESKTOP="$XDG_SESSION_DESKTOP" \
     XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \
-    dbus-launch --exit-with-session xfce4-session >>/tmp/xfce.log 2>&1 &
+    DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
+    xfce4-session >>/tmp/xfce.log 2>&1 &
   xfce_pid=$!
+}
+
+wait_for_wm() {
+  local i
+  for i in $(seq 1 50); do
+    if xprop -root -display "$DISPLAY" _NET_SUPPORTING_WM_CHECK >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.1
+  done
+  log "warning: window manager did not appear within 5s"
+  return 1
 }
 
 start_plank() {
   reap_if_needed "${plank_pid:-}"
   log "starting plank"
-  runuser -u node -- env DISPLAY="$DISPLAY" XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \
+  runuser -u node -- env \
+    DISPLAY="$DISPLAY" \
+    XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \
+    DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
     plank >>/tmp/plank.log 2>&1 &
   plank_pid=$!
+}
+
+start_clipboard() {
+  if ! command -v autocutsel >/dev/null 2>&1; then
+    return
+  fi
+  reap_if_needed "${autocutsel_clip_pid:-}"
+  reap_if_needed "${autocutsel_pri_pid:-}"
+  log "starting clipboard sync"
+  runuser -u node -- env DISPLAY="$DISPLAY" autocutsel -selection CLIPBOARD -fork >>/tmp/autocutsel.log 2>&1
+  autocutsel_clip_pid=$(pgrep -n -u node autocutsel)
+  runuser -u node -- env DISPLAY="$DISPLAY" autocutsel -selection PRIMARY -fork >>/tmp/autocutsel.log 2>&1
+  autocutsel_pri_pid=$(pgrep -n -u node -f 'autocutsel.*PRIMARY')
 }
 
 start_x11vnc() {
@@ -67,6 +108,18 @@ start_websockify() {
   log "starting websockify on 6080"
   websockify --web=/usr/share/novnc 6080 localhost:5900 >>/tmp/websockify.log 2>&1 &
   websockify_pid=$!
+}
+
+# Restart the full desktop session (XFCE + Plank + clipboard) on the same
+# D-Bus so all components share one session bus.
+restart_desktop_session() {
+  [ -n "${plank_pid:-}" ] && kill "$plank_pid" >/dev/null 2>&1 || true
+  [ -n "${autocutsel_clip_pid:-}" ] && kill "$autocutsel_clip_pid" >/dev/null 2>&1 || true
+  [ -n "${autocutsel_pri_pid:-}" ] && kill "$autocutsel_pri_pid" >/dev/null 2>&1 || true
+  start_xfce
+  wait_for_wm || true
+  start_plank
+  start_clipboard
 }
 
 trap cleanup INT TERM
@@ -102,18 +155,16 @@ fi
 # Disable screensaver/DPMS
 xset -display "$DISPLAY" -dpms s off s noblank >/dev/null 2>&1 || true
 
+# Start persistent D-Bus session shared by all desktop components
+start_dbus
+
 # Start desktop stack
 start_xfce
-sleep 2
+wait_for_wm || true
 start_plank
+start_clipboard
 start_x11vnc
 start_websockify
-
-# Clipboard sync
-if command -v autocutsel >/dev/null 2>&1; then
-  runuser -u node -- env DISPLAY="$DISPLAY" autocutsel -selection CLIPBOARD -fork >>/tmp/autocutsel.log 2>&1 || true
-  runuser -u node -- env DISPLAY="$DISPLAY" autocutsel -selection PRIMARY -fork >>/tmp/autocutsel.log 2>&1 || true
-fi
 
 # Monitor and restart dead processes
 while true; do
@@ -123,9 +174,8 @@ while true; do
     exit 1
   fi
   if ! pid_running "${xfce_pid:-}"; then
-    log "xfce4-session exited; restarting"
-    start_xfce
-    sleep 2
+    log "xfce4-session exited; restarting desktop session"
+    restart_desktop_session
   fi
   if ! pid_running "${plank_pid:-}"; then
     log "plank exited; restarting"
