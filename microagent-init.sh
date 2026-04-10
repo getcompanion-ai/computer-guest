@@ -96,6 +96,11 @@ if [ -f /etc/microagent/authorized_keys ]; then
   install -m 0600 -o node -g node /etc/microagent/authorized_keys /home/node/.ssh/authorized_keys
 fi
 
+if [ -f /etc/microagent/trusted_user_ca_keys ]; then
+  log "using injected trusted user CA keys"
+  chmod 0644 /etc/microagent/trusted_user_ca_keys
+fi
+
 if command -v jitterentropy-rngd >/dev/null 2>&1; then
   log "starting jitterentropy-rngd"
   jitterentropy-rngd -v >/var/log/jitterentropy.log 2>&1 &

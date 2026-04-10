@@ -2,6 +2,10 @@
 set -uo pipefail
 
 export DISPLAY=:0
+export DESKTOP_SESSION=xfce
+export XDG_CURRENT_DESKTOP=XFCE
+export XDG_SESSION_DESKTOP=xfce
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-/home/node/.config}"
 
 log() {
   printf '[microagent-desktop] %s\n' "$*" >&2
@@ -23,31 +27,38 @@ cleanup() {
   trap - INT TERM
   [ -n "${websockify_pid:-}" ] && kill "$websockify_pid" >/dev/null 2>&1 || true
   [ -n "${x11vnc_pid:-}" ] && kill "$x11vnc_pid" >/dev/null 2>&1 || true
-  [ -n "${xterm_pid:-}" ] && kill "$xterm_pid" >/dev/null 2>&1 || true
-  [ -n "${openbox_pid:-}" ] && kill "$openbox_pid" >/dev/null 2>&1 || true
+  [ -n "${plank_pid:-}" ] && kill "$plank_pid" >/dev/null 2>&1 || true
+  [ -n "${xfce_pid:-}" ] && kill "$xfce_pid" >/dev/null 2>&1 || true
   [ -n "${xvfb_pid:-}" ] && kill "$xvfb_pid" >/dev/null 2>&1 || true
   wait >/dev/null 2>&1 || true
   exit 0
 }
 
-start_openbox() {
-  reap_if_needed "${openbox_pid:-}"
-  log "starting openbox"
-  runuser -u node -- env DISPLAY="$DISPLAY" openbox >>/tmp/openbox.log 2>&1 &
-  openbox_pid=$!
+start_xfce() {
+  reap_if_needed "${xfce_pid:-}"
+  log "starting xfce4-session"
+  runuser -u node -- env \
+    DISPLAY="$DISPLAY" \
+    DESKTOP_SESSION="$DESKTOP_SESSION" \
+    XDG_CURRENT_DESKTOP="$XDG_CURRENT_DESKTOP" \
+    XDG_SESSION_DESKTOP="$XDG_SESSION_DESKTOP" \
+    XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \
+    dbus-launch --exit-with-session xfce4-session >>/tmp/xfce.log 2>&1 &
+  xfce_pid=$!
 }
 
-start_xterm() {
-  reap_if_needed "${xterm_pid:-}"
-  log "starting xterm"
-  runuser -u node -- env DISPLAY="$DISPLAY" xterm -fa Monospace -fs 12 >>/tmp/xterm.log 2>&1 &
-  xterm_pid=$!
+start_plank() {
+  reap_if_needed "${plank_pid:-}"
+  log "starting plank"
+  runuser -u node -- env DISPLAY="$DISPLAY" XDG_CONFIG_HOME="$XDG_CONFIG_HOME" \
+    plank >>/tmp/plank.log 2>&1 &
+  plank_pid=$!
 }
 
 start_x11vnc() {
   reap_if_needed "${x11vnc_pid:-}"
   log "starting x11vnc"
-  x11vnc -display "$DISPLAY" -rfbport 5900 -forever -shared -nopw >>/tmp/x11vnc.log 2>&1 &
+  x11vnc -display "$DISPLAY" -rfbport 5900 -forever -shared -nopw -quiet >>/tmp/x11vnc.log 2>&1 &
   x11vnc_pid=$!
 }
 
@@ -60,8 +71,13 @@ start_websockify() {
 
 trap cleanup INT TERM
 
+# Apply desktop profile on first boot
+log "applying desktop profile"
+runuser -u node -- /opt/desktop/scripts/apply-desktop-profile.sh 2>&1 || true
+
+# Start Xvfb
 log "starting Xvfb"
-Xvfb "$DISPLAY" -screen 0 1280x800x24 >/tmp/xvfb.log 2>&1 &
+Xvfb "$DISPLAY" -screen 0 1280x800x24 -ac >/tmp/xvfb.log 2>&1 &
 xvfb_pid=$!
 
 ready=0
@@ -83,24 +99,37 @@ if [ "$ready" -ne 1 ]; then
   exit 1
 fi
 
-start_openbox
-start_xterm
+# Disable screensaver/DPMS
+xset -display "$DISPLAY" -dpms s off s noblank >/dev/null 2>&1 || true
+
+# Start desktop stack
+start_xfce
+sleep 2
+start_plank
 start_x11vnc
 start_websockify
 
+# Clipboard sync
+if command -v autocutsel >/dev/null 2>&1; then
+  runuser -u node -- env DISPLAY="$DISPLAY" autocutsel -selection CLIPBOARD -fork >>/tmp/autocutsel.log 2>&1 || true
+  runuser -u node -- env DISPLAY="$DISPLAY" autocutsel -selection PRIMARY -fork >>/tmp/autocutsel.log 2>&1 || true
+fi
+
+# Monitor and restart dead processes
 while true; do
   if ! pid_running "$xvfb_pid"; then
     log "Xvfb exited; stopping desktop session"
     wait "$xvfb_pid" >/dev/null 2>&1 || true
     exit 1
   fi
-  if ! pid_running "${openbox_pid:-}"; then
-    log "openbox exited; restarting"
-    start_openbox
+  if ! pid_running "${xfce_pid:-}"; then
+    log "xfce4-session exited; restarting"
+    start_xfce
+    sleep 2
   fi
-  if ! pid_running "${xterm_pid:-}"; then
-    log "xterm exited; restarting"
-    start_xterm
+  if ! pid_running "${plank_pid:-}"; then
+    log "plank exited; restarting"
+    start_plank
   fi
   if ! pid_running "${x11vnc_pid:-}"; then
     log "x11vnc exited; restarting"

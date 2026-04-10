@@ -10,6 +10,7 @@ PasswordAuthentication no
 KbdInteractiveAuthentication no
 UsePAM no
 AuthorizedKeysFile .ssh/authorized_keys
+TrustedUserCAKeys /etc/microagent/trusted_user_ca_keys
 StrictModes no
 
 SyslogFacility AUTH
