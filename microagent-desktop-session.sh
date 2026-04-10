@@ -39,7 +39,7 @@ cleanup() {
 
 start_dbus() {
   log "starting dbus session"
-  eval "$(dbus-launch --sh-syntax)"
+  eval "$(runuser -u node -- dbus-launch --sh-syntax)"
   export DBUS_SESSION_BUS_ADDRESS
   dbus_pid="$DBUS_SESSION_BUS_PID"
 }
