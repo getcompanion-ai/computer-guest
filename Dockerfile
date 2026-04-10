@@ -95,6 +95,13 @@ RUN curl -fsSL -o /tmp/google-chrome-stable.deb \
   && rm -f /tmp/google-chrome-stable.deb /etc/apt/sources.list.d/google-chrome.list \
   && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /usr/share/fonts/truetype/jetbrains-mono \
+  && curl -fsSL -o /tmp/jbmono.tar.xz \
+     https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/JetBrainsMono.tar.xz \
+  && tar xf /tmp/jbmono.tar.xz -C /usr/share/fonts/truetype/jetbrains-mono \
+  && fc-cache -f \
+  && rm -f /tmp/jbmono.tar.xz
+
 RUN useradd --create-home --shell /bin/bash node \
   && passwd -d node \
   && mkdir -p /home/node/.ssh \
