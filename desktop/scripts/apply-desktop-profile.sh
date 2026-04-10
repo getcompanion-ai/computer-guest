@@ -16,11 +16,9 @@ fi
 
 mkdir -p "$MARKER_DIR" "$XDG_CONFIG_HOME"
 
-# XFCE config
 rm -rf "$XDG_CONFIG_HOME/xfce4"
 cp -R "$PROFILE_ROOT/xfce" "$XDG_CONFIG_HOME/xfce4"
 
-# Plank config
 mkdir -p "$XDG_CONFIG_HOME/plank"
 cp -R "$PROFILE_ROOT/plank/." "$XDG_CONFIG_HOME/plank/"
 

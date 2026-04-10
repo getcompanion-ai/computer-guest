@@ -86,8 +86,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dbus-user-session \
   && rm -rf /var/lib/apt/lists/*
 
-# Chromium: Ubuntu 24.04 only ships a snap stub, so pull the real .deb from
-# the Debian Sid repo with proper GPG key verification.
 RUN curl -fsSL https://ftp-master.debian.org/keys/archive-key-12.asc \
       | gpg --dearmor -o /etc/apt/keyrings/debian-archive.gpg \
   && printf '%s\n' \

@@ -37,8 +37,6 @@ cleanup() {
   exit 0
 }
 
-# Start a persistent D-Bus session and export its address so all child
-# processes (XFCE, Plank, autocutsel) share the same bus.
 start_dbus() {
   log "starting dbus session"
   eval "$(dbus-launch --sh-syntax)"
@@ -110,8 +108,6 @@ start_websockify() {
   websockify_pid=$!
 }
 
-# Restart the full desktop session (XFCE + Plank + clipboard) on the same
-# D-Bus so all components share one session bus.
 restart_desktop_session() {
   [ -n "${plank_pid:-}" ] && kill "$plank_pid" >/dev/null 2>&1 || true
   [ -n "${autocutsel_clip_pid:-}" ] && kill "$autocutsel_clip_pid" >/dev/null 2>&1 || true
@@ -124,11 +120,9 @@ restart_desktop_session() {
 
 trap cleanup INT TERM
 
-# Apply desktop profile on first boot
 log "applying desktop profile"
 runuser -u node -- /opt/desktop/scripts/apply-desktop-profile.sh 2>&1 || true
 
-# Start Xvfb
 log "starting Xvfb"
 Xvfb "$DISPLAY" -screen 0 1280x800x24 -ac >/tmp/xvfb.log 2>&1 &
 xvfb_pid=$!
@@ -152,13 +146,10 @@ if [ "$ready" -ne 1 ]; then
   exit 1
 fi
 
-# Disable screensaver/DPMS
 xset -display "$DISPLAY" -dpms s off s noblank >/dev/null 2>&1 || true
 
-# Start persistent D-Bus session shared by all desktop components
 start_dbus
 
-# Start desktop stack
 start_xfce
 wait_for_wm || true
 start_plank
@@ -166,7 +157,6 @@ start_clipboard
 start_x11vnc
 start_websockify
 
-# Monitor and restart dead processes
 while true; do
   if ! pid_running "$xvfb_pid"; then
     log "Xvfb exited; stopping desktop session"
