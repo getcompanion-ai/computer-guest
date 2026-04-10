@@ -76,8 +76,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xfdesktop4 \
     xfce4-settings \
     xfce4-terminal \
+    xfconf \
     thunar \
     plank \
+    e2fsprogs \
     autocutsel \
     greybird-gtk-theme \
     elementary-xfce-icon-theme \

@@ -100,6 +100,8 @@ mountpoint -q /run || mount -t tmpfs tmpfs /run
 mkdir -p /tmp /var/tmp /run/sshd /var/log
 chmod 1777 /tmp /var/tmp
 
+resize2fs /dev/vda >/dev/null 2>&1 || true
+
 cleanup() {
   trap - INT TERM
   [ -n "${rng_pid:-}" ] && kill "$rng_pid" >/dev/null 2>&1 || true
