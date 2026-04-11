@@ -179,6 +179,16 @@ if [ -f /etc/microagent/trusted_user_ca_keys ]; then
   chmod 0644 /etc/microagent/trusted_user_ca_keys
 fi
 
+# Raise default process and file-descriptor limits for interactive sessions.
+ulimit -n 1048576 2>/dev/null || true
+ulimit -u 65536  2>/dev/null || true
+cat >/etc/security/limits.d/microagent.conf <<'LIMITS'
+* soft nofile 1048576
+* hard nofile 1048576
+* soft nproc  65536
+* hard nproc  65536
+LIMITS
+
 if command -v jitterentropy-rngd >/dev/null 2>&1; then
   log "starting jitterentropy-rngd"
   jitterentropy-rngd -v >/var/log/jitterentropy.log 2>&1 &

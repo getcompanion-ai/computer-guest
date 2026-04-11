@@ -3,6 +3,9 @@ case $- in
   *) return ;;
 esac
 
+# Ensure user-local binaries are on PATH.
+[[ ":$PATH:" == *":$HOME/.local/bin:"* ]] || export PATH="$HOME/.local/bin:$PATH"
+
 computer_prompt_base_name() {
   local name=""
   if [ -r /etc/microagent/machine-name ]; then

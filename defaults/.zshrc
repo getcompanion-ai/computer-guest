@@ -1,5 +1,8 @@
 export LANG="${LANG:-C.UTF-8}"
 
+# Ensure user-local binaries are on PATH.
+[[ ":$PATH:" == *":$HOME/.local/bin:"* ]] || export PATH="$HOME/.local/bin:$PATH"
+
 HISTFILE="${HOME}/.zsh_history"
 HISTSIZE=50000
 SAVEHIST=50000

@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fzf \
     gh \
     git \
+    htop \
     iputils-ping \
     iproute2 \
     jitterentropy-rngd \
@@ -113,6 +114,7 @@ RUN useradd --create-home --shell /bin/bash node \
   && printf 'node ALL=(ALL) NOPASSWD:ALL\n' >/etc/sudoers.d/node \
   && chmod 440 /etc/sudoers.d/node \
   && install -d -m 0755 /etc/microagent \
+  && install -d -m 0755 -o node -g node /home/node/.local/bin \
   && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
   && ln -sf /usr/bin/batcat /usr/local/bin/bat \
   && ln -sf /usr/bin/nvim /usr/local/bin/vim \
@@ -130,6 +132,7 @@ COPY microagent-network-up.sh /usr/local/bin/microagent-network-up
 COPY defaults/.zshrc /home/node/.zshrc
 COPY defaults/.bashrc /home/node/.bashrc
 COPY defaults/.profile /home/node/.profile
+COPY defaults/pip.conf /etc/pip.conf
 COPY terminfo/xterm-ghostty.terminfo /tmp/xterm-ghostty.terminfo
 COPY terminfo/xterm-kitty.terminfo /tmp/xterm-kitty.terminfo
 
