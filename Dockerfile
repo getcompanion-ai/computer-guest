@@ -136,12 +136,14 @@ COPY defaults/.zshrc /home/node/.zshrc
 COPY defaults/.bashrc /home/node/.bashrc
 COPY defaults/.profile /home/node/.profile
 COPY defaults/pip.conf /etc/pip.conf
+COPY defaults/AGENTS.md /home/node/AGENTS.md
 COPY terminfo/xterm-ghostty.terminfo /tmp/xterm-ghostty.terminfo
 COPY terminfo/xterm-kitty.terminfo /tmp/xterm-kitty.terminfo
 
 RUN chmod 755 /usr/local/bin/microagent-init /usr/local/bin/microagent-desktop-session /usr/local/bin/microagent-network-up \
   && chmod 755 /opt/desktop/scripts/apply-desktop-profile.sh \
-  && chown node:node /home/node/.zshrc /home/node/.bashrc /home/node/.profile \
+  && chown node:node /home/node/.zshrc /home/node/.bashrc /home/node/.profile /home/node/AGENTS.md \
+  && ln -sf /home/node/AGENTS.md /home/node/CLAUDE.md \
   && usermod -s /usr/bin/zsh node \
   && install -d /opt/zsh/pure \
   && ln -sf /usr/local/bin/microagent-init /sbin/init \

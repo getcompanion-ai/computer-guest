@@ -57,6 +57,7 @@ alias ls='eza --group-directories-first --icons=auto'
 alias la='eza -a --group-directories-first --icons=auto'
 alias ll='eza -lah --git --group-directories-first --icons=auto'
 alias lt='eza --tree --level=2 --group-directories-first --icons=auto'
+alias cc='claude --dangerously-skip-permissions'
 
 if [ -r /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
   source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
