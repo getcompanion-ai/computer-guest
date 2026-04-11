@@ -3,7 +3,8 @@ FROM public.ecr.aws/docker/library/ubuntu:24.04
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV EDITOR=nvim \
+ENV LANG=C.UTF-8 \
+    EDITOR=nvim \
     VISUAL=nvim \
     XDG_CONFIG_HOME=/home/node/.config \
     XDG_CACHE_HOME=/home/node/.cache \
@@ -14,9 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
     gnupg \
+    software-properties-common \
   && mkdir -p /etc/apt/keyrings \
   && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
   && printf '%s\n' "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" >/etc/apt/sources.list.d/nodesource.list \
+  && add-apt-repository -y ppa:neovim-ppa/unstable \
   && apt-get update \
   && apt-get install -y --no-install-recommends \
     bat \
