@@ -114,7 +114,10 @@ RUN useradd --create-home --shell /bin/bash node \
   && printf 'node ALL=(ALL) NOPASSWD:ALL\n' >/etc/sudoers.d/node \
   && chmod 440 /etc/sudoers.d/node \
   && install -d -m 0755 /etc/microagent \
+  && install -d -m 0755 -o node -g node /home/node/.local \
   && install -d -m 0755 -o node -g node /home/node/.local/bin \
+  && install -d -m 0755 -o node -g node /home/node/.local/share \
+  && install -d -m 0755 -o node -g node /home/node/.local/state \
   && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
   && ln -sf /usr/bin/batcat /usr/local/bin/bat \
   && ln -sf /usr/bin/nvim /usr/local/bin/vim \
