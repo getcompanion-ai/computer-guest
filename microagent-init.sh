@@ -38,6 +38,7 @@ cleanup() {
   [ -n "${ready_agent_pid:-}" ] && kill "$ready_agent_pid" >/dev/null 2>&1 || true
   [ -n "${sshd_pid:-}" ] && kill "$sshd_pid" >/dev/null 2>&1 || true
   [ -n "${desktop_pid:-}" ] && kill "$desktop_pid" >/dev/null 2>&1 || true
+  [ -n "${guestd_pid:-}" ] && kill "$guestd_pid" >/dev/null 2>&1 || true
   wait >/dev/null 2>&1 || true
   exit 0
 }
@@ -73,6 +74,13 @@ start_desktop() {
   log "starting noVNC desktop on 6080"
   /usr/local/bin/microagent-desktop-session >>/var/log/desktop.log 2>&1 &
   desktop_pid=$!
+}
+
+start_guestd() {
+  reap_if_needed "${guestd_pid:-}"
+  log "starting guestd on 49983"
+  /usr/local/bin/microagent-guestd >>/var/log/guestd.log 2>&1 &
+  guestd_pid=$!
 }
 
 trap cleanup INT TERM
@@ -125,6 +133,7 @@ fi
 start_ready_agent
 start_sshd
 start_desktop
+start_guestd
 
 while true; do
   if ! pid_running "${ready_agent_pid:-}"; then
@@ -138,6 +147,10 @@ while true; do
   if ! pid_running "${desktop_pid:-}"; then
     log "desktop session exited; restarting"
     start_desktop
+  fi
+  if ! pid_running "${guestd_pid:-}"; then
+    log "guestd exited; restarting"
+    start_guestd
   fi
   sleep 1
 done

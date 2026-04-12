@@ -1,3 +1,15 @@
+FROM --platform=$BUILDPLATFORM golang:1.26.1 AS guestd-builder
+
+ARG TARGETOS
+ARG TARGETARCH
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+COPY packages/guestd ./packages/guestd
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -o /out/microagent-guestd ./packages/guestd/cmd/guestd
+
 FROM public.ecr.aws/docker/library/ubuntu:24.04
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -133,6 +145,7 @@ COPY microagent-init.sh /usr/local/bin/microagent-init
 COPY microagent-desktop-session.sh /usr/local/bin/microagent-desktop-session
 COPY microagent-network-up.sh /usr/local/bin/microagent-network-up
 COPY microagent-ready-agent.py /usr/local/bin/microagent-ready-agent
+COPY --from=guestd-builder /out/microagent-guestd /usr/local/bin/microagent-guestd
 COPY defaults/.zshrc /home/node/.zshrc
 COPY defaults/.bashrc /home/node/.bashrc
 COPY defaults/.profile /home/node/.profile
@@ -141,7 +154,7 @@ COPY defaults/AGENTS.md /home/node/AGENTS.md
 COPY terminfo/xterm-ghostty.terminfo /tmp/xterm-ghostty.terminfo
 COPY terminfo/xterm-kitty.terminfo /tmp/xterm-kitty.terminfo
 
-RUN chmod 755 /usr/local/bin/microagent-init /usr/local/bin/microagent-desktop-session /usr/local/bin/microagent-network-up /usr/local/bin/microagent-ready-agent \
+RUN chmod 755 /usr/local/bin/microagent-init /usr/local/bin/microagent-desktop-session /usr/local/bin/microagent-network-up /usr/local/bin/microagent-ready-agent /usr/local/bin/microagent-guestd \
   && chmod 755 /opt/desktop/scripts/apply-desktop-profile.sh \
   && chown node:node /home/node/.zshrc /home/node/.bashrc /home/node/.profile /home/node/AGENTS.md \
   && ln -sf /home/node/AGENTS.md /home/node/CLAUDE.md \
